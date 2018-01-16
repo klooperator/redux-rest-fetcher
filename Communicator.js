@@ -137,10 +137,11 @@ class Communicator {
    * @returns {Object} - {body: JSON.stringify()}
    */
   getBody = request => {
-    if (!request.body || !isObject(request.body)) return false;
+    if (!request.body) return false;
     if (typeof request.body === "string" && isObject(JSON.parse(request.body)))
       return { body: request.body };
-    return { body: JSON.stringify(request.body) };
+    if (isObject(request.body)) return { body: JSON.stringify(request.body) };
+    return false;
   };
 
   /**

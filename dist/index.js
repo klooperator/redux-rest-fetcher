@@ -161,9 +161,10 @@ var _initialiseProps = function _initialiseProps() {
   };
 
   this.getBody = function (request) {
-    if (!request.body || !lodash.isObject(request.body)) return false;
+    if (!request.body) return false;
     if (typeof request.body === "string" && lodash.isObject(JSON.parse(request.body))) return { body: request.body };
-    return { body: JSON.stringify(request.body) };
+    if (lodash.isObject(request.body)) return { body: JSON.stringify(request.body) };
+    return false;
   };
 
   this.processParams = function (params) {

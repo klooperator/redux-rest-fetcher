@@ -1,6 +1,6 @@
 {
   "name": "redux-rest-fetcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Helper for creating and executing fetch calls that works standalone or can dispatch results to redux store.",
   "main": "dist/reduxrestfetcher.js",
   "rolledup":"dist/index.js",

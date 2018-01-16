@@ -1,5 +1,3 @@
-https://stackedit.io/app
-
 # react-redux-fetcher
 
 Small library for creating API endpoint calls and other fetch calls. Can be used in any project, but is meant to be used with redux to dispatch results to store.

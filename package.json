@@ -4,7 +4,6 @@
   "description": "Helper for creating and executing fetch calls that works standalone or can dispatch results to redux store.",
   "main": "dist/reduxrestfetcher.js",
   "rolledup":"dist/index.js",
-  "repository": "https://github.com/klooperator/redux-rest-fetcher",
   "author": "klooperator",
   "license": "MIT",
   "private": false,
@@ -39,5 +38,21 @@
     "lint:fix": "npm run lint -- --fix",
     "min": "uglifyjs dist/index.js -o dist/reduxrestfetcher.js -v -m -c --keep-fnames --screw-ie8",
     "build": "npm run lint:fix && rimraf dist/* && rollup -c && npm run min"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klooperator/redux-rest-fetcher"
+  },
+  "keywords": [
+    "redux",
+    "rest",
+    "fetch",
+    "api",
+    "restfull",
+    "react"
+  ],
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/klooperator/redux-rest-fetcher"
 }

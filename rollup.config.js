@@ -17,18 +17,18 @@ export default {
   external,
   output: [
     {
-      file: pkg.main,
+      file: pkg.rolledup,
       format: "umd",
       sourcemap: true,
       strict: false,
       exports: "named",
       name: "reduxrestfetcher"
-    },
-    {
+    }
+    /* {
       file: pkg["jsnext:main"],
       format: "es",
       sourcemap: true,
       strict: false
-    }
+    } */
   ]
 };

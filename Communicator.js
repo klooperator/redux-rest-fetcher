@@ -411,7 +411,7 @@ class Communicator {
     this.basePrefix = prefix;
   };
   setFetch = _fetch => {
-    this.fetch = _fetch;
+    this.fetch = _fetch.bind(window);
   };
   setBaseOptions = options => {
     this.baseOptions = options;

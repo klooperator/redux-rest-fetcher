@@ -1,9 +1,10 @@
 const pkg = require("./package.json");
-
+import babel from "rollup-plugin-babel";
+import nodeResolve from "rollup-plugin-node-resolve";
 const external = Object.keys(pkg.dependencies);
 
 export default {
-  input: "./index.js",
+  input: "./Communicator.js",
   plugins: [
     babel({
       babelrc: true,

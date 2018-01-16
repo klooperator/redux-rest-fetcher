@@ -79,3 +79,101 @@ Once your store is created and populated with ```@@INIT```, pass a dispatcher to
 api.setDispatcher(store.dispatch)
 ```
 Now any time you call you api calls, results will be placed to redux store.
+
+## Creating calls
+
+You create your calls as key value object pairs. Where key will be a name of the function you call and value the call options.
+Yo can create multiple files, for ex. each for specific endpoint of your api
+
+```javascript
+// /calls/User.js
+const enpoint = 'user';
+export default {
+    login:{
+        url: `${endpoint}/login`,
+        options: {
+            method: 'post',
+            headers:{
+                accept: 'application/json',
+                }
+            },
+    },
+    getGender:{
+        url: `${endpoint}/gender/:id`,
+        options: {
+            headers:{
+                Accept: "text/html",
+                "Content-Type": "text/html;charset=utf-8",
+                }
+            },
+    }
+}
+...
+// calls/server.js
+const enpoint = 'server';
+export default {
+    refresh:{
+        url: `${endpoint}/refresh`,
+        options: {
+            credentials: 'omit',
+            headers:{
+                accept: 'application/json',
+
+                }
+            },
+    },
+}
+...
+// calls/index.js
+import User from './User';
+import Srv from './Server';
+const calls = Object.assign({}, User, Srv);
+export default calls;
+```
+
+## Overrides and more overrides
+
+There are 3 levels of constructing your request. Base options, options inside your calls and per call options.
+
+Firstly you can set base options. If no other options are set this will be used for each call. In next example we will just implement default options ( this are already in there, if you skip this step, those will be your base options)
+
+```javascript
+api.setBaseOptions({
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Cache: "no-cache",
+        credentials: "same-origin"
+      }
+    })
+```
+
+Then you can override base options with options in call object.In example for ```refresh``` resulting options will be:
+```javascript
+{
+      credentials: "include",
+      headers: {
+        Accept: "text/html",
+        "Content-Type": "text/html;charset=utf-8",
+        Cache: "no-cache",
+      }
+    }
+```
+In the end you can override request per call by passing second paramater object with desired vaue like this:
+```javascript
+api.refresh({},{
+    headers:{
+        Cache: 'force-cache'
+        }
+    });
+//result:
+{
+      credentials: "include",
+      headers: {
+        Accept: "text/html",
+        "Content-Type": "text/html;charset=utf-8",
+        Cache: "force-cache",
+      }
+    }
+```

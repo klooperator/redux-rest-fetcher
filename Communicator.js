@@ -2,6 +2,11 @@ import { isObject, isFunction } from "lodash";
 
 /* import  */
 
+/**
+ * @description Error object containing error messages
+ * @todo Implement proper error objects
+ * @memberof Communicator
+ */
 const errors = {
   PREFETCH_NOT_A_FUNCTION:
     "Prefetch is expected to be a function. I dont know what I have here...",
@@ -11,7 +16,7 @@ const errors = {
 };
 
 /**
- * Merges 2 object recursavly, overriding values from second to first object.
+ * @description Merges 2 object recursavly, overriding values from second to first object.
  * @param {Obect} obj1 - firs object, will be overriden
  * @param {Obect} obj2 - second object
  */
@@ -39,7 +44,7 @@ const mergeTwo = (obj1, obj2) => {
   return out;
 };
 /**
- * Merges multiple objects recursevly
+ * @description Merges multiple objects recursevly
  * @param {Spread of objects} args
  */
 const deepMerge = (...args) => {
@@ -69,7 +74,7 @@ class Communicator {
   }
 
   /**
-   * Function used for constructing url and inserting parametars in to the
+   * @description Function used for constructing url and inserting parametars in to the
    * predefined holders.
    * @example
    * baseUrl = localhost
@@ -90,27 +95,61 @@ class Communicator {
    */
   constructUrl = (endPointUrl, request) => {
     let url = endPointUrl;
+    const excluded = ["body", "GET"];
     if (endPointUrl.indexOf("http") === -1) {
       url = `${this.baseUrl}${endPointUrl}`;
     }
     if (isObject(request)) {
       Object.keys(request).forEach(key => {
-        const regex = new RegExp(`:${key}`);
-        if (regex.test(url)) {
-          url = url.replace(regex, request[key]);
+        if (excluded.indexOf(key) === -1) {
+          const regex = new RegExp(`:${key}`);
+          if (regex.test(url)) {
+            url = url.replace(regex, request[key]);
+          }
+        } else if (key === "GET") {
+          url = url + this.getGetParamsAsString(request[key]);
         }
-        /* console.log(JSON.stringify(url)); */
       });
     }
     return url;
   };
 
   /**
-   * Function that processes params of the request such as body.
+   * @description Helper function that converts js object to GET params string.
+   * {id:'123', user:'some'} -> "?id=123&user=some"
+   * @param {Object} getObj - object containing GET key value pairs
+   * @memberof Communicator
+   */
+  getGetParamsAsString = getObj => {
+    let out = "?";
+    Object.keys(getObj).forEach((k, i) => {
+      if (typeof getObj[k] !== "object" && typeof getObj[k] !== "function")
+        out = out + (i !== 0 ? "&" : "") + k + "=" + getObj[k];
+    });
+    return out;
+  };
+
+  /**
+   * @description
+   * Helper function that extracts , checks and prepares body object
+   * @param {Object} request - request object containing body key.
+   * body can either be preparsed or as js object.
+   * @returns {Object} - {body: JSON.stringify()}
+   */
+  getBody = request => {
+    if (!request.body || !isObject(request.body)) return false;
+    if (typeof request.body === "string" && isObject(JSON.parse(request.body)))
+      return { body: request.body };
+    return { body: JSON.stringify(request.body) };
+  };
+
+  /**
+   * @description Function that processes params of the request such as body.
    * You can send value either as object or as stringified object
    * @param {Object} - params object
    * @return {Object} - object containing keys and stringified values
    * @memberof Communicator
+   *
    */
   processParams = params => {
     /* TODO - separate body and rest. add ability to pass new fetch options overrides */
@@ -134,7 +173,7 @@ class Communicator {
   };
 
   /**
-   * This is a main fetch function. This will resolve the action and return either a Promise if no
+   * @description This is a main fetch function. This will resolve the action and return either a Promise if no
    *  dispatch is provided or it will dispatch
    * success/ failure action to redux.
    * @param {String} url - target url. This will be modified by request object if needed
@@ -148,6 +187,7 @@ class Communicator {
    * @param {String} name - Name of the api action. Based on name a appropriate action will be
    * dispatched.
    * @param {Boolean} useEmptyHeaders - if true, empty headers will be sent.
+   * @todo expected response json/text
    */
   baseFetch = (
     url,
@@ -169,7 +209,12 @@ class Communicator {
     }
     /* merge (TODO deep) baseOptions<-options<-params options */
     /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
-    let endOption = deepMerge(this.baseOptions, options, _params);
+    let endOption = deepMerge(
+      this.baseOptions,
+      options,
+      _params,
+      this.getBody(request)
+    );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
     /* if no dispatch return promise */
@@ -206,7 +251,7 @@ class Communicator {
   };
 
   /**
-   * Function that creates functions from objects
+   * @description Function that creates functions from objects
    * @param {Object} endpoints - object from witch function will be created.
    * Keys will be the function names.
    * @memberof Communicator
@@ -229,9 +274,9 @@ class Communicator {
   };
 
   /**
-   * Reducer you export to your store.
+   * @description Reducer you export to your store.
    * This will extract name of the function ( as it containes prefix and sufix).
-   * Calls generic reducr set for given name.
+   * Calls generic reducer set for given name.
    * @param {Object} state - state
    * @param {Object} action - action
    * @memberof Communicator
@@ -249,7 +294,7 @@ class Communicator {
   };
 
   /**
-   * reducer for specific function name
+   * @description reducer for specific function name
    * @param {String} k - name of the function
    * @param {Object} state - state
    * @param {Object} action - action
@@ -278,7 +323,7 @@ class Communicator {
   };
 
   /**
-   * Function that creates initial state for each api call for reducer.
+   * @description Function that creates initial state for each api call for reducer.
    * @returns state for api reducer
    */
   genererateInitialState = () => {
@@ -299,7 +344,7 @@ class Communicator {
   };
 
   /**
-   * Function that creates redux action.
+   * @description Function that creates redux action.
    * Adds pefix to type
    * @param {String} name - name of the action
    * @param {Object} request - payload item
@@ -315,7 +360,7 @@ class Communicator {
     }
   });
   /**
-   * Function that creates redux action.
+   * @description Function that creates redux action.
    * Adds sufix to type
    * @param {String} name - name of the action
    * @param {Object} request - payload item
@@ -331,7 +376,7 @@ class Communicator {
     }
   });
   /**
-   * Function that creates redux action.
+   * @description Function that creates redux action.
    * Adds sufix to type
    * @param {String} name - name of the action
    * @param {Object} request - payload item
@@ -367,6 +412,9 @@ class Communicator {
   };
   setFetch = _fetch => {
     this.fetch = _fetch;
+  };
+  setBaseOptions = options => {
+    this.baseOptions = options;
   };
 }
 

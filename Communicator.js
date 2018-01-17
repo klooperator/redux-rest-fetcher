@@ -95,7 +95,7 @@ class Communicator {
    */
   constructUrl = (endPointUrl, request) => {
     let url = endPointUrl;
-    const excluded = ["body", "GET"];
+    const excluded = ["body", "GET", "expected"];
     if (endPointUrl.indexOf("http") === -1) {
       url = `${this.baseUrl}${endPointUrl}`;
     }
@@ -188,7 +188,7 @@ class Communicator {
    * @param {String} name - Name of the api action. Based on name a appropriate action will be
    * dispatched.
    * @param {Boolean} useEmptyHeaders - if true, empty headers will be sent.
-   * @todo expected response json/text
+   * @todo test expected response json/text
    */
   baseFetch = (
     url,
@@ -198,6 +198,7 @@ class Communicator {
     name,
     useEmptyHeaders = false
   ) => {
+    const expected = request.expected || "json";
     /* construct url */
     const endPointUrl = this.constructUrl(url, request);
     /* set params */
@@ -238,7 +239,7 @@ class Communicator {
           url: response.url
         };
         if (response.status === 200 || response.ok) {
-          return Promise.all([response.json(), Promise.resolve(res)]);
+          return Promise.all([response[expected](), Promise.resolve(res)]);
         }
         throw response;
       })

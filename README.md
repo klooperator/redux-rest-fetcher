@@ -1,6 +1,6 @@
 # react-redux-fetcher
 
-**This is not production ready, I do not guaranty anything. Testers are welcome**
+**I do not guaranty anything. Testers are welcome. Some use cases are not tested at all (like sending FormData..)**
 
 Small library for creating API endpoint calls and other fetch calls. Can be used in any project, but is meant to be used with redux to dispatch results to store.
 
@@ -36,7 +36,7 @@ Once setup you can create your calls like this:
                 }
          },
          getUser:{
-            url: "http://yoursite.com/api/get-user:id",
+            url: "http://yoursite.com/api/get-user/:id",
            method: 'get',
            headers:{
                 Accept: 'application/json'
@@ -61,14 +61,15 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import api from 'redux-rest-fetcher';
-import apiCalls './src/api/calls';
+import apiCalls from './src/api/calls';
 
 //here you can setup basic configuration that will be valid for all calls.
 api.setBaseUrl('http://your-restapi-adress.com');
 //you can ommit this, but in case you use other fetch (ex. polyfill) you can set it here
 api.setFetch(window.fetch);
-//also can be ommited, default is '(.)(.)api'
-api.setPrefix('@@api');
+//also can be ommited, default is 'api(.)(.)'
+//you will see this in redux actions: api(.)(.)callName
+api.setPrefix('api@@');
 //and of course api calls
 api.setEndpoints(apiCalls);
 ```
@@ -224,7 +225,16 @@ api.someService({
 // end url result:
 'http://someservice.com/api?serial=123456&foo=bar'
 ```
->Of course that means ```body``` and ```GET``` are reserved and do not make keys in url params with those keywords (```url/api/:GET``` or ```uer/api/:body```)
+#### expected
+You can set what you expect to as return to prevent fetch errors before they occur.
+
+Default expect is ```json```.
+```javascript
+api.getText({expected: 'text'})
+```
+>Of course that means ```body```, ```GET``` and ```expected``` are reserved and do not make keys in url params with those keywords (```url/api/:GET``` or ```uer/api/:body```)
+## Using without redux
+You can use this library without redux. If you don't pass dispatch function to the library instance you will receive a fetch promise that you need to resolve yourself.
 ## Roadmap
 
 1. Test sending formData, files and other non JSON cases

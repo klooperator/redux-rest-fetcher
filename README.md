@@ -74,13 +74,13 @@ api.setEndpoints(apiCalls);
 ```
 At this point redux-rest-fetcher is ready to be passed to your store. Extract reducer from it
 ```javascript
-const api = api.getReducer()
+const apiReducer = api.getReducer()
 ```
 and pass it to your store to be incorporated in your ```combineReducer()```
 ```javascript
 const rootReducer = combineReducer({
 	something,
-	api,
+	apiReducer,
 	somethingElse
 });
 ```

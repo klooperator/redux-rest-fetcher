@@ -1,5 +1,7 @@
 # react-redux-fetcher
 
+**This is not production ready, I do not guaranty anything. Testers are welcome**
+
 Small library for creating API endpoint calls and other fetch calls. Can be used in any project, but is meant to be used with redux to dispatch results to store.
 
 Small, treeshaked lodash dependency.

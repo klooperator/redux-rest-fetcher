@@ -175,3 +175,29 @@ api.refresh({},{
       }
     }
 ```
+### Overiding URL
+
+During your basic configuration you can setup base URL that will be attached to every call as prefix.
+```javascript
+api.setBaseUrl('localhost:3030');
+```
+Defult base URL is empty string, so all calls will be made on same page.
+You can override URL on the flight with absolute ```url``` key. Redux-rest-fetcher will check if ```url``` has ```'http'```, and if yes it will not attach baseUrl prefix to that call.
+```javascript
+export default = {
+	someService:{
+		url:'http://someservice.com/api'//this will override baseUrl
+	}
+}
+```
+
+## Roadmap
+
+1. Test sending formData, files and other non JSON cases
+2. Add postfetch tranformer methods like:
+    * add to array
+    * soft data update
+3. Resolve loading flag to be per call and as pool globaly
+4. Remove lodash dependency
+5. Fix rollup setup
+

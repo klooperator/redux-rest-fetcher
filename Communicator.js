@@ -56,7 +56,7 @@ const deepMerge = (...args) => {
 };
 
 class Communicator {
-  constructor(baseUrl = "localhost:3000", dispatch = null) {
+  constructor(baseUrl = "", dispatch = null) {
     this.baseUrl = baseUrl;
     this.dispatch = dispatch;
     this.fetch = fetch.bind(window);

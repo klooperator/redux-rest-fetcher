@@ -8,6 +8,17 @@ Small, treeshaked lodash dependency.
 
 Original at: [https://github.com/klooperator/redux-rest-fetcher](https://github.com/klooperator/redux-rest-fetcher)
 
+## Install
+
+```
+npm install redux-rest-fetcher --save
+```
+```
+yarn add redux-rest-fetcher
+```
+```
+bower install redux-rest-fetcher --save
+```
 
 ## Description & example
 

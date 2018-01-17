@@ -203,6 +203,27 @@ export default = {
 	}
 }
 ```
+## Features
+There are several features included.
+#### Body parsing
+You can send either stringified JSON or plain object to your call.
+```javascript
+api.login({body: obj});
+//same as
+api.login({body: JSON.stringify(obj)});
+```
+####  GET params
+You can past your get params as object with key ```GET```. It will be parsed and the result will be attached to your call URL.
+```javascript
+api.someService({
+    GET:{
+        serial: '123456',
+        foo: 'bar'
+    }
+});
+// end url result:
+'http://someservice.com/api?serial=123456&foo=bar'
+```
 
 ## Roadmap
 

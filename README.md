@@ -224,7 +224,7 @@ api.someService({
 // end url result:
 'http://someservice.com/api?serial=123456&foo=bar'
 ```
-
+>Of course that means ```body``` and ```GET``` are reserved and do not make keys in url params with those keywords (```url/api/:GET``` or ```uer/api/:body```)
 ## Roadmap
 
 1. Test sending formData, files and other non JSON cases

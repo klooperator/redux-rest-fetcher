@@ -1,6 +1,9 @@
+/* import  */
 import { isObject, isFunction } from "lodash";
 
-/* import  */
+/* CONSTS */
+const excluded = ["body", "GET", "expected"];
+const positiveResponseStatus = [200, 201, 202, 204, 205]
 
 /**
  * @description Error object containing error messages
@@ -95,7 +98,6 @@ class Communicator {
    */
   constructUrl = (endPointUrl, request) => {
     let url = endPointUrl;
-    const excluded = ["body", "GET", "expected"];
     if (endPointUrl.indexOf("http") === -1) {
       url = `${this.baseUrl}${endPointUrl}`;
     }
@@ -238,7 +240,7 @@ class Communicator {
           type: response.type,
           url: response.url
         };
-        if (response.status === 200 || response.ok) {
+        if (positiveResponseStatus.indexOf(response.status) !== -1 || response.ok) {
           return Promise.all([response[expected](), Promise.resolve(res)]);
         }
         throw response;

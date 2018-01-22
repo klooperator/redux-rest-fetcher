@@ -1,0 +1,26 @@
+["i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+"i", "you", "he", "she", "it", "we", "they", "what", "who",
+"me", "him", "her", "it", "us", "you", "them", "whom",
+"mine", "yours", "his", "hers", "ours", "theirs",
+"this", "that", "these", "those",
+"who", "whom", "which", "what", "whose", "whoever", "whatever", "whichever", "whomever",
+"who", "whom", "whose", "which", "that", "what", "whatever", "whoever", "whomever", "whichever",
+"myself", "yourself", "himself", "herself", "itself", "ourselves", "themselves",
+"myself", "yourself", "himself", "herself", "itself", "ourselves", "themselves",
+
+"Anything", "everybody", "another", "each", "few", "many", "none", "some", "all", "any", "anybody", "anyone", "everyone", "everything", "nobody", "nothing", "none",
+"other", "others", "several", "somebody", "someone", "something", "most", "enough", "little", "more", "both", "either", "neither", "one", "much", "such",
+"the", "a", "an", "this", "that", "these", "those", "my", "your", "his", "her", "its", "our", "their", "much", "many", "most", "some", "any", "enough",
+"one", "ten", "thirty","all", "both", "half", "either", "neither", "each", "every","other", "another","such", "what", "rather", "quite",
+"after", "although", "as", "as if", "as long","as", "as much as", "as soon as", "as though",
+"because", "before", "lest","once","unless", "until","when", "whenever", "where", "wherever", "while",
+"And","Or","But","Nor","So","For","Yet","After","Although","As","Because","Before","Once","Since","Though","Till","Unless","Until","What","When","Whenever","Wherever","Whether","While",
+
+
+"a few", "a little","Each other", "one another", "a lot of", "no one","by the time","by the time", "even if", "even though","if", "in order that", "in case",
+"only if","provided that","since", "so that","than", "that", "though", "till","As Long As","As If",
+"Even If",
+"Even Though","So That"]
+
+
+"["i","you","he","she","it","we","they","me","him","her","us","them","what","who","whom","mine","yours","his","hers","ours","theirs","this","that","these","those","which","whose","whoever","whatever","whichever","whomever","myself","yourself","himself","herself","itself","ourselves","themselves","anything","everybody","another","each","few","many","none","some","all","any","anybody","anyone","everyone","everything","nobody","nothing","other","others","several","somebody","someone","something","most","enough","little","more","both","either","neither","one","much","such","the","a","an","my","your","its","our","their","ten","thirty","half","every","rather","quite","after","although","as","as if","as long","as much as","as soon as","as though","because","before","lest","once","unless","until","when","whenever","where","wherever","while","and","or","but","nor","so","for","yet","since","though","till","whether","a few","a little","each other","one another","a lot of","no one","by the time","even if","even though","if","in order that","in case","only if","provided that","so that","than","as long as"]"

@@ -61,6 +61,8 @@ class Communicator {
     this.dispatch = dispatch;
     this.fetch = fetch.bind(window);
     this.reducerPool = {};
+    this.prefetchPool = {};
+    this.getState = undefined;
     this.basePrefix = "api(.)(.)";
     this.baseOptions = {
       credentials: "include",
@@ -200,7 +202,7 @@ class Communicator {
   ) => {
     const expected = request.expected || "json";
     /* construct url */
-    const endPointUrl = this.constructUrl(url, request);
+    let endPointUrl = this.constructUrl(url, request);
     /* set params */
     let _params;
     try {
@@ -223,6 +225,15 @@ class Communicator {
     if (!this.dispatch || this.dispatch === null) {
       console.log("no dispatch");
       return this.fetch(endPointUrl, endOption);
+    }
+    console.log(this);
+    if (this.prefetchPool[name] && this.getState) {
+      const pref = this.prefetchPool[name](this.getState())(
+        endPointUrl,
+        endOption
+      );
+      if (pref.url) endPointUrl = pref.url;
+      if (pref.options) endOption = pref.options;
     }
     /* dispatch action start */
     this.dispatch(this.actionStart(name, endPointUrl, endOption));
@@ -264,13 +275,11 @@ class Communicator {
 
       if (reducer) this.reducerPool[k] = reducer;
       else this.reducerPool[k] = this.constructGenericReducer(k);
-
+      if (prefetch && isFunction(prefetch)) {
+        this.prefetchPool[k] = prefetch;
+      }
       this[k] = (request = {}, params = {}) => {
-        if (prefetch && isFunction(prefetch)) {
-          this.resolvePrefetch(prefetch, url, request, params);
-        } else {
-          this.baseFetch(url, options, request, params, k, useEmptyHeaders);
-        }
+        this.baseFetch(url, options, request, params, k, useEmptyHeaders);
       };
     });
   };
@@ -303,6 +312,7 @@ class Communicator {
    * @memberof Communicator
    */
   constructGenericReducer = k => (state, action) => {
+    console.log(action);
     const newState = { ...state };
     newState.isLoading = action.loading;
     if (action.type.indexOf("_success") !== -1) {
@@ -417,6 +427,9 @@ class Communicator {
   };
   setBaseOptions = options => {
     this.baseOptions = options;
+  };
+  setGetState = getState => {
+    this.getState = getState;
   };
 }
 

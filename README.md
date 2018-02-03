@@ -1,6 +1,6 @@
 # react-redux-fetcher
 
-**I do not guaranty anything. Testers are welcome. Some use cases are not tested at all (like sending FormData..)**
+**This library was made for my personal project. Not all use cases are tested. I welcome testers, sugestions, pull requests etc.**
 
 Small library for creating API endpoint calls and other fetch calls. Can be used in any project, but is meant to be used with redux to dispatch results to store.
 

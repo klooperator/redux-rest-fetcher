@@ -49,6 +49,9 @@ var _extends = Object.assign || function (target) {
 };
 
 /* import  */
+/* CONSTS */
+var excluded = ["body", "GET", "expected"];
+var positiveResponseStatus = [200, 201, 202, 204, 205];
 
 /**
  * @description Error object containing error messages
@@ -135,7 +138,6 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructUrl = function (endPointUrl, request) {
     var url = endPointUrl;
-    var excluded = ["body", "GET", "expected"];
     if (endPointUrl.indexOf("http") === -1) {
       url = "" + _this.baseUrl + endPointUrl;
     }
@@ -218,7 +220,6 @@ var _initialiseProps = function _initialiseProps() {
       console.log("no dispatch");
       return _this.fetch(endPointUrl, endOption);
     }
-    console.log(_this);
     if (_this.prefetchPool[name] && _this.getState) {
       var pref = _this.prefetchPool[name](_this.getState())(endPointUrl, endOption);
       if (pref.url) endPointUrl = pref.url;
@@ -237,7 +238,7 @@ var _initialiseProps = function _initialiseProps() {
         type: response.type,
         url: response.url
       };
-      if (response.status === 200 || response.ok) {
+      if (positiveResponseStatus.indexOf(response.status) !== -1 || response.ok) {
         return Promise.all([response[expected](), Promise.resolve(res)]);
       }
       throw response;
@@ -289,22 +290,38 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructGenericReducer = function (k) {
     return function (state, action) {
-      console.log(action);
       var newState = _extends({}, state);
+      if (action.loading) {
+        if (newState.isLoading && newState.isLoading.length) {
+          isLoading.push(k);
+        } else {
+          newState.isLoading = [];
+          newState.isLoading.push(k);
+        }
+      } else {
+        if (newState.isLoading && newState.isLoading.length && newState.isLoading.indexOf(k) !== -1) {
+          newState.isLoading.splice(newState.isLoading.indexOf(k), 1);
+        } else if (newState.isLoading && newState.isLoading.length === 0) {
+          newState.isLoading = false;
+        }
+      }
       newState.isLoading = action.loading;
       if (action.type.indexOf("_success") !== -1) {
+        newState[k].loading = false;
         newState[k].data = action.payload.data;
         newState[k].ok = action.payload.msg.ok;
         newState[k].redirected = action.payload.msg.redirected;
         newState[k].status = action.payload.msg.status;
         newState[k].type = action.payload.msg.type;
       } else if (action.type.indexOf("_fail") !== -1) {
+        newState[k].loading = false;
         newState[k].ok = action.payload.msg.ok;
         newState[k].redirected = action.payload.msg.redirected;
         newState[k].status = action.payload.msg.status;
         newState[k].type = action.payload.msg.type;
         newState[k].error = action.payload.error;
       } else {
+        newState[k].loading = true;
         newState[k].request = action.payload.request;
         newState[k].params = action.payload.params;
       }

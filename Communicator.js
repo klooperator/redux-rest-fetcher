@@ -3,7 +3,7 @@ import { isObject, isFunction } from "lodash";
 
 /* CONSTS */
 const excluded = ["body", "GET", "expected"];
-const positiveResponseStatus = [200, 201, 202, 204, 205]
+const positiveResponseStatus = [200, 201, 202, 204, 205];
 
 /**
  * @description Error object containing error messages
@@ -228,7 +228,6 @@ class Communicator {
       console.log("no dispatch");
       return this.fetch(endPointUrl, endOption);
     }
-    console.log(this);
     if (this.prefetchPool[name] && this.getState) {
       const pref = this.prefetchPool[name](this.getState())(
         endPointUrl,
@@ -251,7 +250,10 @@ class Communicator {
           type: response.type,
           url: response.url
         };
-        if (positiveResponseStatus.indexOf(response.status) !== -1 || response.ok) {
+        if (
+          positiveResponseStatus.indexOf(response.status) !== -1 ||
+          response.ok
+        ) {
           return Promise.all([response[expected](), Promise.resolve(res)]);
         }
         throw response;
@@ -314,20 +316,23 @@ class Communicator {
    * @memberof Communicator
    */
   constructGenericReducer = k => (state, action) => {
-    console.log(action);
     const newState = { ...state };
-    if(action.loading){
-      if(newState.isLoading && newState.isLoading.length){
-        newState,isLoading.push(k);
-      }else{
+    if (action.loading) {
+      if (newState.isLoading && newState.isLoading.length) {
+        newState, isLoading.push(k);
+      } else {
         newState.isLoading = [];
         newState.isLoading.push(k);
       }
-    }else{
-      if(newState.isLoading && newState.isLoading.length && newState.isLoading.indexOf(k) !== -1){
+    } else {
+      if (
+        newState.isLoading &&
+        newState.isLoading.length &&
+        newState.isLoading.indexOf(k) !== -1
+      ) {
         newState.isLoading.splice(newState.isLoading.indexOf(k), 1);
-      }else if(newState.isLoading && newState.isLoading.length === 0){
-        newState.isLoading=false;
+      } else if (newState.isLoading && newState.isLoading.length === 0) {
+        newState.isLoading = false;
       }
     }
     newState.isLoading = action.loading;

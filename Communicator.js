@@ -306,20 +306,37 @@ class Communicator {
    */
   constructGenericReducer = k => (state, action) => {
     const newState = { ...state };
+    if(action.loading){
+      if(newState.isLoading && newState.isLoading.length){
+        newState,isLoading.push(k);
+      }else{
+        newState.isLoading = [];
+        newState.isLoading.push(k);
+      }
+    }else{
+      if(newState.isLoading && newState.isLoading.length && newState.isLoading.indexOf(k) !== -1){
+        newState.isLoading.splice(newState.isLoading.indexOf(k), 1);
+      }else if(newState.isLoading && newState.isLoading.length === 0){
+        newState.isLoading=false;
+      }
+    }
     newState.isLoading = action.loading;
     if (action.type.indexOf("_success") !== -1) {
+      newState[k].loading = false;
       newState[k].data = action.payload.data;
       newState[k].ok = action.payload.msg.ok;
       newState[k].redirected = action.payload.msg.redirected;
       newState[k].status = action.payload.msg.status;
       newState[k].type = action.payload.msg.type;
     } else if (action.type.indexOf("_fail") !== -1) {
+      newState[k].loading = false;
       newState[k].ok = action.payload.msg.ok;
       newState[k].redirected = action.payload.msg.redirected;
       newState[k].status = action.payload.msg.status;
       newState[k].type = action.payload.msg.type;
       newState[k].error = action.payload.error;
     } else {
+      newState[k].loading = true;
       newState[k].request = action.payload.request;
       newState[k].params = action.payload.params;
     }

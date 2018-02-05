@@ -106,7 +106,7 @@ var deepMerge = function deepMerge() {
 };
 
 var Communicator = function Communicator() {
-  var baseUrl = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "localhost:3000";
+  var baseUrl = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
   var dispatch = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
   classCallCheck(this, Communicator);
 
@@ -116,6 +116,8 @@ var Communicator = function Communicator() {
   this.dispatch = dispatch;
   this.fetch = fetch.bind(window);
   this.reducerPool = {};
+  this.prefetchPool = {};
+  this.getState = undefined;
   this.basePrefix = "api(.)(.)";
   this.baseOptions = {
     credentials: "include",
@@ -133,7 +135,7 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructUrl = function (endPointUrl, request) {
     var url = endPointUrl;
-    var excluded = ["body", "GET"];
+    var excluded = ["body", "GET", "expected"];
     if (endPointUrl.indexOf("http") === -1) {
       url = "" + _this.baseUrl + endPointUrl;
     }
@@ -195,6 +197,7 @@ var _initialiseProps = function _initialiseProps() {
     var name = arguments[4];
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
+    var expected = request.expected || "json";
     /* construct url */
     var endPointUrl = _this.constructUrl(url, request);
     /* set params */
@@ -215,6 +218,12 @@ var _initialiseProps = function _initialiseProps() {
       console.log("no dispatch");
       return _this.fetch(endPointUrl, endOption);
     }
+    console.log(_this);
+    if (_this.prefetchPool[name] && _this.getState) {
+      var pref = _this.prefetchPool[name](_this.getState())(endPointUrl, endOption);
+      if (pref.url) endPointUrl = pref.url;
+      if (pref.options) endOption = pref.options;
+    }
     /* dispatch action start */
     _this.dispatch(_this.actionStart(name, endPointUrl, endOption));
     /* fetch part */
@@ -229,7 +238,7 @@ var _initialiseProps = function _initialiseProps() {
         url: response.url
       };
       if (response.status === 200 || response.ok) {
-        return Promise.all([response.json(), Promise.resolve(res)]);
+        return Promise.all([response[expected](), Promise.resolve(res)]);
       }
       throw response;
     }).then(function (json) {
@@ -251,16 +260,14 @@ var _initialiseProps = function _initialiseProps() {
 
 
       if (reducer) _this.reducerPool[k] = reducer;else _this.reducerPool[k] = _this.constructGenericReducer(k);
-
+      if (prefetch && lodash.isFunction(prefetch)) {
+        _this.prefetchPool[k] = prefetch;
+      }
       _this[k] = function () {
         var request = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-        if (prefetch && lodash.isFunction(prefetch)) {
-          _this.resolvePrefetch(prefetch, url, request, params);
-        } else {
-          _this.baseFetch(url, options, request, params, k, useEmptyHeaders);
-        }
+        _this.baseFetch(url, options, request, params, k, useEmptyHeaders);
       };
     });
   };
@@ -282,6 +289,7 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructGenericReducer = function (k) {
     return function (state, action) {
+      console.log(action);
       var newState = _extends({}, state);
       newState.isLoading = action.loading;
       if (action.type.indexOf("_success") !== -1) {
@@ -381,6 +389,10 @@ var _initialiseProps = function _initialiseProps() {
 
   this.setBaseOptions = function (options) {
     _this.baseOptions = options;
+  };
+
+  this.setGetState = function (getState) {
+    _this.getState = getState;
   };
 };
 

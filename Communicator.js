@@ -283,7 +283,7 @@ class Communicator {
         this.prefetchPool[k] = prefetch;
       }
       this[k] = (request = {}, params = {}) => {
-        this.baseFetch(url, options, request, params, k, useEmptyHeaders);
+        return this.baseFetch(url, options, request, params, k, useEmptyHeaders);
       };
     });
   };
@@ -319,7 +319,7 @@ class Communicator {
     const newState = { ...state };
     if (action.loading) {
       if (newState.isLoading && newState.isLoading.length) {
-        newState, isLoading.push(k);
+        newState.isLoading.push(k);
       } else {
         newState.isLoading = [];
         newState.isLoading.push(k);
@@ -331,11 +331,12 @@ class Communicator {
         newState.isLoading.indexOf(k) !== -1
       ) {
         newState.isLoading.splice(newState.isLoading.indexOf(k), 1);
-      } else if (newState.isLoading && newState.isLoading.length === 0) {
+      }
+      if (newState.isLoading && newState.isLoading.length === 0) {
         newState.isLoading = false;
       }
     }
-    newState.isLoading = action.loading;
+    /* newState.isLoading = action.loading; */
     if (action.type.indexOf("_success") !== -1) {
       newState[k].loading = false;
       newState[k].data = action.payload.data;

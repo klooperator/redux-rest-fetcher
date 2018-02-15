@@ -268,7 +268,7 @@ var _initialiseProps = function _initialiseProps() {
         var request = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-        _this.baseFetch(url, options, request, params, k, useEmptyHeaders);
+        return _this.baseFetch(url, options, request, params, k, useEmptyHeaders);
       };
     });
   };
@@ -293,7 +293,7 @@ var _initialiseProps = function _initialiseProps() {
       var newState = _extends({}, state);
       if (action.loading) {
         if (newState.isLoading && newState.isLoading.length) {
-          isLoading.push(k);
+          newState.isLoading.push(k);
         } else {
           newState.isLoading = [];
           newState.isLoading.push(k);
@@ -301,11 +301,12 @@ var _initialiseProps = function _initialiseProps() {
       } else {
         if (newState.isLoading && newState.isLoading.length && newState.isLoading.indexOf(k) !== -1) {
           newState.isLoading.splice(newState.isLoading.indexOf(k), 1);
-        } else if (newState.isLoading && newState.isLoading.length === 0) {
+        }
+        if (newState.isLoading && newState.isLoading.length === 0) {
           newState.isLoading = false;
         }
       }
-      newState.isLoading = action.loading;
+      /* newState.isLoading = action.loading; */
       if (action.type.indexOf("_success") !== -1) {
         newState[k].loading = false;
         newState[k].data = action.payload.data;

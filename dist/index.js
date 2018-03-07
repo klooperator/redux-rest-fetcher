@@ -26,28 +26,6 @@ var classCallCheck = function (instance, Constructor) {
   }
 };
 
-
-
-
-
-
-
-
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
 /* import  */
 /* CONSTS */
 var excluded = ["body", "GET", "expected"];
@@ -196,34 +174,54 @@ var _initialiseProps = function _initialiseProps() {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var request = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var params = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-    var name = arguments[4];
+    var /* options from a singel call */
+    name = arguments[4];
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
     var expected = request.expected || "json";
     /* construct url */
     var endPointUrl = _this.constructUrl(url, request);
     /* set params */
-    var _params = void 0;
+    /* let _params;
     try {
-      _params = _this.processParams(params);
+      _params = this.processParams(params);
     } catch (e) {
       console.log(e.message);
       return e;
-    }
+    } */
     /* merge (TODO deep) baseOptions<-options<-params options */
     /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
-    var endOption = deepMerge(_this.baseOptions, options, _params, _this.getBody(request));
+    var endOption = deepMerge(_this.baseOptions, options, params, _this.getBody(request));
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
+
+    console.log(request, endOption);
+
+    if (_this.prefetchPool[name] && _this.getState) {
+      var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
+      var object = {
+        getState: _this.getState,
+        dispatch: _this.dispatch,
+        request: request,
+        options: endOption
+      };
+      /* you can either change object directly or return {request, response} */
+      pf.forEach(function (e) {
+        console.log(object);
+        console.log(e);
+        var res = e(object);
+        if (res) object = deepMerge(object, res);
+      });
+      /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
+      if (object.request) endPointUrl = _this.constructUrl(object.request.url || url, object.request);
+      if (object.options) endOption = deepMerge(object.options, _this.getBody(object.request || request));
+    } else {
+      endOption = deepMerge(endOption, _this.getBody(request));
+    }
     /* if no dispatch return promise */
     if (!_this.dispatch || _this.dispatch === null) {
-      console.log("no dispatch");
+      /* console.log("no dispatch"); */
       return _this.fetch(endPointUrl, endOption);
-    }
-    if (_this.prefetchPool[name] && _this.getState) {
-      var pref = _this.prefetchPool[name](_this.getState())(endPointUrl, endOption);
-      if (pref.url) endPointUrl = pref.url;
-      if (pref.options) endOption = pref.options;
     }
     /* dispatch action start */
     _this.dispatch(_this.actionStart(name, endPointUrl, endOption));
@@ -267,8 +265,9 @@ var _initialiseProps = function _initialiseProps() {
       _this[k] = function () {
         var request = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var _useEmptyHeaders = arguments[2];
 
-        return _this.baseFetch(url, options, request, params, k, useEmptyHeaders);
+        return _this.baseFetch(url, options, request, params, k, _useEmptyHeaders || useEmptyHeaders);
       };
     });
   };
@@ -290,7 +289,11 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructGenericReducer = function (k) {
     return function (state, action) {
-      var newState = _extends({}, state);
+      var newState = Object.assign({}, state);
+      newState[k] = Object.assign({}, state[k]);
+      /* Object.keys(state).forEach(key => {
+        newState[key] = Object.assign({}, state[key]);
+      }); */
       if (action.loading) {
         if (newState.isLoading && newState.isLoading.length) {
           newState.isLoading.push(k);

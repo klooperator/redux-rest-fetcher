@@ -1,5 +1,5 @@
 /* import  */
-import { isObject, isFunction } from "lodash";
+import { isObject, isFunction, isArray } from "lodash";
 
 /* CONSTS */
 const excluded = ["body", "GET", "expected"];
@@ -218,17 +218,44 @@ class Communicator {
     let endOption = deepMerge(
       this.baseOptions,
       options,
-      params
-      /* this.getBody(request) */
+      params,
+      this.getBody(request)
     );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
 
+    console.log(request, endOption);
+
     if (this.prefetchPool[name] && this.getState) {
-      const pref = this.prefetchPool[name](this.getState())(request, endOption);
-      if (pref.request)
-        endPointUrl = this.constructUrl(pref.url || url, pref.request);
-      if (pref.options) endOption = deepMerge(pref.options, request.body || {});
+      const pf = isArray(this.prefetchPool[name])
+        ? this.prefetchPool[name]
+        : [this.prefetchPool[name]];
+      let object = {
+        getState: this.getState,
+        dispatch: this.dispatch,
+        request,
+        options: endOption
+      };
+      /* you can either change object directly or return {request, response} */
+      pf.forEach(e => {
+        console.log(object);
+        console.log(e);
+        const res = e(object);
+        if (res) object = deepMerge(object, res);
+      });
+      /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
+      if (object.request)
+        endPointUrl = this.constructUrl(
+          object.request.url || url,
+          object.request
+        );
+      if (object.options)
+        endOption = deepMerge(
+          object.options,
+          this.getBody(object.request || request)
+        );
+    } else {
+      endOption = deepMerge(endOption, this.getBody(request));
     }
     /* if no dispatch return promise */
     if (!this.dispatch || this.dispatch === null) {
@@ -322,7 +349,11 @@ class Communicator {
    * @memberof Communicator
    */
   constructGenericReducer = k => (state, action) => {
-    const newState = { ...state };
+    const newState = Object.assign({}, state);
+    newState[k] = Object.assign({}, state[k]);
+    /* Object.keys(state).forEach(key => {
+      newState[key] = Object.assign({}, state[key]);
+    }); */
     if (action.loading) {
       if (newState.isLoading && newState.isLoading.length) {
         newState.isLoading.push(k);

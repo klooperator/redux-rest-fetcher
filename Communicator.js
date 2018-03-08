@@ -197,14 +197,14 @@ class Communicator {
   baseFetch = (
     url,
     options = {} /* options from call */,
-    request = {} /* get, post params */,
-    params = {} /* options from a singel call */,
+    requestParams = {} /* get, post params */,
+    reqestOptions = {} /* options from a singel call */,
     name,
     useEmptyHeaders = false
   ) => {
-    const expected = request.expected || "json";
+    const expected = requestParams.expected || "json";
     /* construct url */
-    let endPointUrl = this.constructUrl(url, request);
+    let endPointUrl = this.constructUrl(url, requestParams);
     /* set params */
     /* let _params;
     try {
@@ -218,13 +218,13 @@ class Communicator {
     let endOption = deepMerge(
       this.baseOptions,
       options,
-      params,
-      this.getBody(request)
+      reqestOptions,
+      this.getBody(requestParams)
     );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
 
-    console.log(request, endOption);
+    console.log(requestParams, endOption);
 
     if (this.prefetchPool[name] && this.getState) {
       const pf = isArray(this.prefetchPool[name])
@@ -233,7 +233,7 @@ class Communicator {
       let object = {
         getState: this.getState,
         dispatch: this.dispatch,
-        request,
+        requestParams,
         options: endOption
       };
       /* you can either change object directly or return {request, response} */
@@ -252,10 +252,10 @@ class Communicator {
       if (object.options)
         endOption = deepMerge(
           object.options,
-          this.getBody(object.request || request)
+          this.getBody(object.request || requestParams)
         );
     } else {
-      endOption = deepMerge(endOption, this.getBody(request));
+      endOption = deepMerge(endOption, this.getBody(requestParams));
     }
     /* if no dispatch return promise */
     if (!this.dispatch || this.dispatch === null) {
@@ -308,12 +308,12 @@ class Communicator {
       if (prefetch && isFunction(prefetch)) {
         this.prefetchPool[k] = prefetch;
       }
-      this[k] = (request = {}, params = {}, _useEmptyHeaders) => {
+      this[k] = (requestParams = {}, requestOptions = {}, _useEmptyHeaders) => {
         return this.baseFetch(
           url,
           options,
-          request,
-          params,
+          requestParams,
+          requestOptions,
           k,
           _useEmptyHeaders || useEmptyHeaders
         );

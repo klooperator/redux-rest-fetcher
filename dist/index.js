@@ -172,15 +172,15 @@ var _initialiseProps = function _initialiseProps() {
 
   this.baseFetch = function (url) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var request = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    var params = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+    var requestParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var reqestOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
     var /* options from a singel call */
     name = arguments[4];
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
-    var expected = request.expected || "json";
+    var expected = requestParams.expected || "json";
     /* construct url */
-    var endPointUrl = _this.constructUrl(url, request);
+    var endPointUrl = _this.constructUrl(url, requestParams);
     /* set params */
     /* let _params;
     try {
@@ -191,18 +191,18 @@ var _initialiseProps = function _initialiseProps() {
     } */
     /* merge (TODO deep) baseOptions<-options<-params options */
     /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
-    var endOption = deepMerge(_this.baseOptions, options, params, _this.getBody(request));
+    var endOption = deepMerge(_this.baseOptions, options, reqestOptions, _this.getBody(requestParams));
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
 
-    console.log(request, endOption);
+    console.log(requestParams, endOption);
 
     if (_this.prefetchPool[name] && _this.getState) {
       var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
       var object = {
         getState: _this.getState,
         dispatch: _this.dispatch,
-        request: request,
+        requestParams: requestParams,
         options: endOption
       };
       /* you can either change object directly or return {request, response} */
@@ -214,9 +214,9 @@ var _initialiseProps = function _initialiseProps() {
       });
       /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
       if (object.request) endPointUrl = _this.constructUrl(object.request.url || url, object.request);
-      if (object.options) endOption = deepMerge(object.options, _this.getBody(object.request || request));
+      if (object.options) endOption = deepMerge(object.options, _this.getBody(object.request || requestParams));
     } else {
-      endOption = deepMerge(endOption, _this.getBody(request));
+      endOption = deepMerge(endOption, _this.getBody(requestParams));
     }
     /* if no dispatch return promise */
     if (!_this.dispatch || _this.dispatch === null) {
@@ -263,11 +263,11 @@ var _initialiseProps = function _initialiseProps() {
         _this.prefetchPool[k] = prefetch;
       }
       _this[k] = function () {
-        var request = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var requestParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var requestOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var _useEmptyHeaders = arguments[2];
 
-        return _this.baseFetch(url, options, request, params, k, _useEmptyHeaders || useEmptyHeaders);
+        return _this.baseFetch(url, options, requestParams, requestOptions, k, _useEmptyHeaders || useEmptyHeaders);
       };
     });
   };

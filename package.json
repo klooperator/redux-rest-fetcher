@@ -37,7 +37,8 @@
     "lint": "eslint ./src",
     "lint:fix": "npm run lint -- --fix",
     "min": "uglifyjs dist/index.js -o dist/reduxrestfetcher.js -v -m -c --keep-fnames --screw-ie8",
-    "build": "npm run lint:fix && rimraf dist/* && rollup -c && npm run min"
+    "build": "npm run lint:fix && rimraf dist/* && rollup -c && npm run min",
+    "start:test": "npm run lint:fix && rimraf dist/* && rollup -c && __test__/index.js"
   },
   "repository": {
     "type": "git",

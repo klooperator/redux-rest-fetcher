@@ -1,5 +1,6 @@
 /* import  */
 import { isObject, isFunction, isArray } from "lodash";
+import { transformers } from "./src/index";
 
 /* CONSTS */
 const excluded = ["body", "GET", "expected"];
@@ -66,6 +67,8 @@ class Communicator {
     this.fetch = fetch.bind(window);
     this.reducerPool = {};
     this.prefetchPool = {};
+    this.postfetchPool = {};
+    this.transformerPool = {};
     this.actions = {};
     this.getState = undefined;
     this.basePrefix = "api(.)(.)";
@@ -205,28 +208,15 @@ class Communicator {
     useEmptyHeaders = false
   ) => {
     const expected = requestParams.expected || "json";
-    /* construct url */
-    let endPointUrl; /*  = this.constructUrl(url, requestParams); */
-    /* set params */
-    /* let _params;
-    try {
-      _params = this.processParams(params);
-    } catch (e) {
-      console.log(e.message);
-      return e;
-    } */
-    /* merge (TODO deep) baseOptions<-options<-params options */
-    /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
+    let endPointUrl;
     let endOption = deepMerge(
       this.baseOptions,
       options,
       reqestOptions
-      /* this.getBody(requestParams) */
+      /* we add body later */
     );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
-
-    /* console.log(requestParams, endOption); */
 
     let object = {
       actions: this.actions,
@@ -242,32 +232,18 @@ class Communicator {
       const pf = isArray(this.prefetchPool[name])
         ? this.prefetchPool[name]
         : [this.prefetchPool[name]];
-      /* object that we pass to prefetch */
 
       /* you can either change object directly or return {params, options} */
       pf.forEach(e => {
         const res = e(object);
         if (res) object = deepMerge(object, res);
       });
-      /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
-      /* if (object.params)
-        endPointUrl = this.constructUrl(
-          object.request.url || url,
-          object.request
-        );
-      if (object.options)
-        endOption = deepMerge(
-          object.options,
-          this.getBody(object.request || requestParams)
-        ); */
-    } /* else {
-      endOption = deepMerge(endOption, this.getBody(requestParams));
-    } */
+    }
+
     endOption = deepMerge(object.options, this.getBody(object.params));
     endPointUrl = this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!this.dispatch || this.dispatch === null) {
-      /* console.log("no dispatch"); */
       return this.fetch(endPointUrl, endOption);
     }
     /* dispatch action start */
@@ -293,6 +269,7 @@ class Communicator {
         throw response;
       })
       .then(json => {
+        /* json[0]->actual response, json[1]->res object storing some metadata */
         this.dispatch(this.actionEnd(name, json[0], json[1]));
       })
       .catch(e => {
@@ -309,12 +286,26 @@ class Communicator {
    */
   setEndpoints = endpoints => {
     Object.keys(endpoints).forEach(k => {
-      const { url, prefetch, reducer, options, useEmptyHeaders } = endpoints[k];
+      const {
+        url,
+        prefetch,
+        reducer,
+        options,
+        useEmptyHeaders,
+        postfetch,
+        transformer = transformers.object
+      } = endpoints[k];
 
       if (reducer) this.reducerPool[k] = reducer;
       else this.reducerPool[k] = this.constructGenericReducer(k);
       if (prefetch && (isFunction(prefetch) || isArray(prefetch))) {
         this.prefetchPool[k] = prefetch;
+      }
+      if (postfetch && (isFunction(postfetch) || isArray(postfetch))) {
+        this.postfetchPool[k] = postfetch;
+      }
+      if (transformer && isFunction(transformer)) {
+        this.transformerPool[k] = transformer;
       }
       this[k] = (requestParams = {}, requestOptions = {}, _useEmptyHeaders) => {
         return this.baseFetch(
@@ -416,7 +407,7 @@ class Communicator {
       state[k] = {
         request: "",
         params: "{}",
-        data: undefined,
+        data: this.transformerPool[k],
         ok: undefined,
         redirected: undefined,
         status: 0,

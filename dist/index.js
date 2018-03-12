@@ -83,6 +83,7 @@ var deepMerge = function deepMerge() {
   args.forEach(function (e) {
     if (e.constructor === Object) out = mergeTwo(out, e);
   });
+  console.log(JSON.parse(JSON.stringify(out)));
   return out;
 };
 
@@ -98,6 +99,7 @@ var Communicator = function Communicator() {
   this.fetch = fetch.bind(window);
   this.reducerPool = {};
   this.prefetchPool = {};
+  this.actions = {};
   this.getState = undefined;
   this.basePrefix = "api(.)(.)";
   this.baseOptions = {
@@ -180,7 +182,7 @@ var _initialiseProps = function _initialiseProps() {
 
     var expected = requestParams.expected || "json";
     /* construct url */
-    var endPointUrl = _this.constructUrl(url, requestParams);
+    var endPointUrl = void 0; /*  = this.constructUrl(url, requestParams); */
     /* set params */
     /* let _params;
     try {
@@ -191,33 +193,49 @@ var _initialiseProps = function _initialiseProps() {
     } */
     /* merge (TODO deep) baseOptions<-options<-params options */
     /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
-    var endOption = deepMerge(_this.baseOptions, options, reqestOptions, _this.getBody(requestParams));
+    var endOption = deepMerge(_this.baseOptions, options, reqestOptions
+    /* this.getBody(requestParams) */
+    );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
 
-    console.log(requestParams, endOption);
+    /* console.log(requestParams, endOption); */
+
+    var object = {
+      actions: _this.actions,
+      getState: _this.getState,
+      dispatch: _this.dispatch,
+      params: requestParams,
+      options: endOption,
+      url: url
+    };
 
     if (_this.prefetchPool[name] && _this.getState) {
+      /* we need this to be an array... */
       var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
-      var object = {
-        getState: _this.getState,
-        dispatch: _this.dispatch,
-        requestParams: requestParams,
-        options: endOption
-      };
-      /* you can either change object directly or return {request, response} */
+      /* object that we pass to prefetch */
+
+      /* you can either change object directly or return {params, options} */
       pf.forEach(function (e) {
-        console.log(object);
-        console.log(e);
         var res = e(object);
         if (res) object = deepMerge(object, res);
       });
       /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
-      if (object.request) endPointUrl = _this.constructUrl(object.request.url || url, object.request);
-      if (object.options) endOption = deepMerge(object.options, _this.getBody(object.request || requestParams));
-    } else {
-      endOption = deepMerge(endOption, _this.getBody(requestParams));
-    }
+      /* if (object.params)
+        endPointUrl = this.constructUrl(
+          object.request.url || url,
+          object.request
+        );
+      if (object.options)
+        endOption = deepMerge(
+          object.options,
+          this.getBody(object.request || requestParams)
+        ); */
+    } /* else {
+      endOption = deepMerge(endOption, this.getBody(requestParams));
+      } */
+    endOption = deepMerge(object.options, _this.getBody(object.params));
+    endPointUrl = _this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!_this.dispatch || _this.dispatch === null) {
       /* console.log("no dispatch"); */
@@ -259,7 +277,7 @@ var _initialiseProps = function _initialiseProps() {
 
 
       if (reducer) _this.reducerPool[k] = reducer;else _this.reducerPool[k] = _this.constructGenericReducer(k);
-      if (prefetch && lodash.isFunction(prefetch)) {
+      if (prefetch && (lodash.isFunction(prefetch) || lodash.isArray(prefetch))) {
         _this.prefetchPool[k] = prefetch;
       }
       _this[k] = function () {
@@ -269,6 +287,7 @@ var _initialiseProps = function _initialiseProps() {
 
         return _this.baseFetch(url, options, requestParams, requestOptions, k, _useEmptyHeaders || useEmptyHeaders);
       };
+      _this.actions[k] = _this[k];
     });
   };
 

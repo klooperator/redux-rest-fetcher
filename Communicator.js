@@ -55,6 +55,7 @@ const deepMerge = (...args) => {
   args.forEach(e => {
     if (e.constructor === Object) out = mergeTwo(out, e);
   });
+  console.log(JSON.parse(JSON.stringify(out)));
   return out;
 };
 
@@ -65,6 +66,7 @@ class Communicator {
     this.fetch = fetch.bind(window);
     this.reducerPool = {};
     this.prefetchPool = {};
+    this.actions = {};
     this.getState = undefined;
     this.basePrefix = "api(.)(.)";
     this.baseOptions = {
@@ -204,7 +206,7 @@ class Communicator {
   ) => {
     const expected = requestParams.expected || "json";
     /* construct url */
-    let endPointUrl = this.constructUrl(url, requestParams);
+    let endPointUrl; /*  = this.constructUrl(url, requestParams); */
     /* set params */
     /* let _params;
     try {
@@ -218,33 +220,37 @@ class Communicator {
     let endOption = deepMerge(
       this.baseOptions,
       options,
-      reqestOptions,
-      this.getBody(requestParams)
+      reqestOptions
+      /* this.getBody(requestParams) */
     );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
 
-    console.log(requestParams, endOption);
+    /* console.log(requestParams, endOption); */
+
+    let object = {
+      actions: this.actions,
+      getState: this.getState,
+      dispatch: this.dispatch,
+      params: requestParams,
+      options: endOption,
+      url
+    };
 
     if (this.prefetchPool[name] && this.getState) {
+      /* we need this to be an array... */
       const pf = isArray(this.prefetchPool[name])
         ? this.prefetchPool[name]
         : [this.prefetchPool[name]];
-      let object = {
-        getState: this.getState,
-        dispatch: this.dispatch,
-        requestParams,
-        options: endOption
-      };
-      /* you can either change object directly or return {request, response} */
+      /* object that we pass to prefetch */
+
+      /* you can either change object directly or return {params, options} */
       pf.forEach(e => {
-        console.log(object);
-        console.log(e);
         const res = e(object);
         if (res) object = deepMerge(object, res);
       });
       /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
-      if (object.request)
+      /* if (object.params)
         endPointUrl = this.constructUrl(
           object.request.url || url,
           object.request
@@ -253,10 +259,12 @@ class Communicator {
         endOption = deepMerge(
           object.options,
           this.getBody(object.request || requestParams)
-        );
-    } else {
+        ); */
+    } /* else {
       endOption = deepMerge(endOption, this.getBody(requestParams));
-    }
+    } */
+    endOption = deepMerge(object.options, this.getBody(object.params));
+    endPointUrl = this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!this.dispatch || this.dispatch === null) {
       /* console.log("no dispatch"); */
@@ -305,7 +313,7 @@ class Communicator {
 
       if (reducer) this.reducerPool[k] = reducer;
       else this.reducerPool[k] = this.constructGenericReducer(k);
-      if (prefetch && isFunction(prefetch)) {
+      if (prefetch && (isFunction(prefetch) || isArray(prefetch))) {
         this.prefetchPool[k] = prefetch;
       }
       this[k] = (requestParams = {}, requestOptions = {}, _useEmptyHeaders) => {
@@ -318,6 +326,7 @@ class Communicator {
           _useEmptyHeaders || useEmptyHeaders
         );
       };
+      this.actions[k] = this[k];
     });
   };
 

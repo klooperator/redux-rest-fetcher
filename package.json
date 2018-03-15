@@ -26,6 +26,9 @@
     "eslint": "^4.15.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-import-resolver-webpack": "^0.8.4",
+    "eslint-plugin-import": "^2.9.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
     "jsdoc": "^3.5.5",
     "rimraf": "^2.6.2",
     "rollup": "^0.54.0",
@@ -38,6 +41,7 @@
     "lint:fix": "npm run lint -- --fix",
     "min": "uglifyjs dist/index.js -o dist/reduxrestfetcher.js -v -m -c --keep-fnames --screw-ie8",
     "build": "npm run lint:fix && rimraf dist/* && rollup -c && npm run min",
+    "build:local": "rimraf dist/* && rollup -c && npm run min",
     "start:test": "npm run lint:fix && rimraf dist/* && rollup -c && __test__/index.js"
   },
   "repository": {

@@ -4,6 +4,24 @@
 	(factory((global.reduxrestfetcher = {}),global.lodash));
 }(this, (function (exports,lodash) {
 
+var object = function object() {
+  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  if (lodash.isObject(data)) return data;
+  return lodash.toPlainObject(data);
+};
+var array = function array() {
+  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+  if (lodash.isArray) return data;
+  return lodash.toArray(data);
+};
+
+var transformers = {
+  object: object,
+  array: array
+};
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -99,6 +117,8 @@ var Communicator = function Communicator() {
   this.fetch = fetch.bind(window);
   this.reducerPool = {};
   this.prefetchPool = {};
+  this.postfetchPool = {};
+  this.transformerPool = {};
   this.actions = {};
   this.getState = undefined;
   this.basePrefix = "api(.)(.)";
@@ -181,25 +201,12 @@ var _initialiseProps = function _initialiseProps() {
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
     var expected = requestParams.expected || "json";
-    /* construct url */
-    var endPointUrl = void 0; /*  = this.constructUrl(url, requestParams); */
-    /* set params */
-    /* let _params;
-    try {
-      _params = this.processParams(params);
-    } catch (e) {
-      console.log(e.message);
-      return e;
-    } */
-    /* merge (TODO deep) baseOptions<-options<-params options */
-    /* let endOption = Object.assign({}, this.baseOptions, options, _params); */
+    var endPointUrl = void 0;
     var endOption = deepMerge(_this.baseOptions, options, reqestOptions
-    /* this.getBody(requestParams) */
+    /* we add body later */
     );
     /* clear headers if needed */
     if (useEmptyHeaders) endOption = { headers: {} };
-
-    /* console.log(requestParams, endOption); */
 
     var object = {
       actions: _this.actions,
@@ -213,32 +220,18 @@ var _initialiseProps = function _initialiseProps() {
     if (_this.prefetchPool[name] && _this.getState) {
       /* we need this to be an array... */
       var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
-      /* object that we pass to prefetch */
 
       /* you can either change object directly or return {params, options} */
       pf.forEach(function (e) {
         var res = e(object);
         if (res) object = deepMerge(object, res);
       });
-      /* const pref = this.prefetchPool[name](this.getState())(request, endOption); */
-      /* if (object.params)
-        endPointUrl = this.constructUrl(
-          object.request.url || url,
-          object.request
-        );
-      if (object.options)
-        endOption = deepMerge(
-          object.options,
-          this.getBody(object.request || requestParams)
-        ); */
-    } /* else {
-      endOption = deepMerge(endOption, this.getBody(requestParams));
-      } */
+    }
+
     endOption = deepMerge(object.options, _this.getBody(object.params));
     endPointUrl = _this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!_this.dispatch || _this.dispatch === null) {
-      /* console.log("no dispatch"); */
       return _this.fetch(endPointUrl, endOption);
     }
     /* dispatch action start */
@@ -259,6 +252,7 @@ var _initialiseProps = function _initialiseProps() {
       }
       throw response;
     }).then(function (json) {
+      /* json[0]->actual response, json[1]->res object storing some metadata */
       _this.dispatch(_this.actionEnd(name, json[0], json[1]));
     }).catch(function (e) {
       _this.dispatch(_this.actionError(name, res, e.message));
@@ -273,12 +267,21 @@ var _initialiseProps = function _initialiseProps() {
           prefetch = _endpoints$k.prefetch,
           reducer = _endpoints$k.reducer,
           options = _endpoints$k.options,
-          useEmptyHeaders = _endpoints$k.useEmptyHeaders;
+          useEmptyHeaders = _endpoints$k.useEmptyHeaders,
+          postfetch = _endpoints$k.postfetch,
+          _endpoints$k$transfor = _endpoints$k.transformer,
+          transformer = _endpoints$k$transfor === undefined ? transformers.object : _endpoints$k$transfor;
 
 
       if (reducer) _this.reducerPool[k] = reducer;else _this.reducerPool[k] = _this.constructGenericReducer(k);
       if (prefetch && (lodash.isFunction(prefetch) || lodash.isArray(prefetch))) {
         _this.prefetchPool[k] = prefetch;
+      }
+      if (postfetch && (lodash.isFunction(postfetch) || lodash.isArray(postfetch))) {
+        _this.postfetchPool[k] = postfetch;
+      }
+      if (transformer && lodash.isFunction(transformer)) {
+        _this.transformerPool[k] = transformer;
       }
       _this[k] = function () {
         var requestParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -359,7 +362,7 @@ var _initialiseProps = function _initialiseProps() {
       state[k] = {
         request: "",
         params: "{}",
-        data: undefined,
+        data: _this.transformerPool[k],
         ok: undefined,
         redirected: undefined,
         status: 0,

@@ -1,9 +1,9 @@
 /* import  */
-import { isObject, isFunction, isArray } from "lodash";
-import { transformers } from "./src/index";
+import { isObject, isFunction, isArray } from 'lodash';
+import { transformers } from './src/index';
 
 /* CONSTS */
-const excluded = ["body", "GET", "expected"];
+const excluded = ['body', 'GET', 'expected'];
 const positiveResponseStatus = [200, 201, 202, 204, 205];
 
 /**
@@ -13,10 +13,10 @@ const positiveResponseStatus = [200, 201, 202, 204, 205];
  */
 const errors = {
   PREFETCH_NOT_A_FUNCTION:
-    "Prefetch is expected to be a function. I dont know what I have here...",
-  PARAMS_NOT_OBJECT: "Error with params. You shoud pass object as params.",
+    'Prefetch is expected to be a function. I dont know what I have here...',
+  PARAMS_NOT_OBJECT: 'Error with params. You shoud pass object as params.',
   PARAM_OBJECT_ERROR:
-    "Error, your object, in params... There is something wrong with it."
+    'Error, your object, in params... There is something wrong with it.',
 };
 
 /**
@@ -27,9 +27,9 @@ const errors = {
 const mergeTwo = (obj1, obj2) => {
   const _obj2 = obj2;
   let out = {};
-  Object.keys(obj1).forEach(k => {
-    if (typeof obj1[k] === "object" && obj1[k].constructor !== Array) {
-      if (obj2[k] && typeof obj2[k] === "object") {
+  Object.keys(obj1).forEach((k) => {
+    if (typeof obj1[k] === 'object' && obj1[k].constructor !== Array) {
+      if (obj2[k] && typeof obj2[k] === 'object') {
         out[k] = mergeTwo(obj1[k], obj2[k]);
       } else {
         out[k] = obj1[k];
@@ -53,7 +53,7 @@ const mergeTwo = (obj1, obj2) => {
  */
 const deepMerge = (...args) => {
   let out = {};
-  args.forEach(e => {
+  args.forEach((e) => {
     if (e.constructor === Object) out = mergeTwo(out, e);
   });
   console.log(JSON.parse(JSON.stringify(out)));
@@ -61,7 +61,7 @@ const deepMerge = (...args) => {
 };
 
 class Communicator {
-  constructor(baseUrl = "", dispatch = null) {
+  constructor(baseUrl = '', dispatch = null) {
     this.baseUrl = baseUrl;
     this.dispatch = dispatch;
     this.fetch = fetch.bind(window);
@@ -71,15 +71,15 @@ class Communicator {
     this.transformerPool = {};
     this.actions = {};
     this.getState = undefined;
-    this.basePrefix = "api(.)(.)";
+    this.basePrefix = 'api(.)(.)';
     this.baseOptions = {
-      credentials: "include",
+      credentials: 'include',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Cache: "no-cache",
-        credentials: "same-origin"
-      }
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Cache: 'no-cache',
+        credentials: 'same-origin',
+      },
     };
   }
 
@@ -105,18 +105,18 @@ class Communicator {
    */
   constructUrl = (endPointUrl, request) => {
     let url = endPointUrl;
-    if (endPointUrl.indexOf("http") === -1) {
+    if (endPointUrl.indexOf('http') === -1) {
       url = `${this.baseUrl}${endPointUrl}`;
     }
     if (isObject(request)) {
-      Object.keys(request).forEach(key => {
+      Object.keys(request).forEach((key) => {
         if (excluded.indexOf(key) === -1) {
           const regex = new RegExp(`:${key}`);
           if (regex.test(url)) {
             url = url.replace(regex, request[key]);
           }
-        } else if (key === "GET") {
-          url = url + this.getGetParamsAsString(request[key]);
+        } else if (key === 'GET') {
+          url += this.getGetParamsAsString(request[key]);
         }
       });
     }
@@ -129,11 +129,10 @@ class Communicator {
    * @param {Object} getObj - object containing GET key value pairs
    * @memberof Communicator
    */
-  getGetParamsAsString = getObj => {
-    let out = "?";
+  getGetParamsAsString = (getObj) => {
+    let out = '?';
     Object.keys(getObj).forEach((k, i) => {
-      if (typeof getObj[k] !== "object" && typeof getObj[k] !== "function")
-        out = out + (i !== 0 ? "&" : "") + k + "=" + getObj[k];
+      if (typeof getObj[k] !== 'object' && typeof getObj[k] !== 'function') { out = `${out + (i !== 0 ? '&' : '') + k}=${getObj[k]}`; }
     });
     return out;
   };
@@ -145,10 +144,9 @@ class Communicator {
    * body can either be preparsed or as js object.
    * @returns {Object} - {body: JSON.stringify()}
    */
-  getBody = request => {
+  getBody = (request) => {
     if (!request.body) return false;
-    if (typeof request.body === "string" && isObject(JSON.parse(request.body)))
-      return { body: request.body };
+    if (typeof request.body === 'string' && isObject(JSON.parse(request.body))) { return { body: request.body }; }
     if (isObject(request.body)) return { body: JSON.stringify(request.body) };
     return false;
   };
@@ -161,16 +159,16 @@ class Communicator {
    * @memberof Communicator
    *
    */
-  processParams = params => {
+  processParams = (params) => {
     /* TODO - separate body and rest. add ability to pass new fetch options overrides */
     if (!isObject(params)) throw errors.PARAMS_NOT_OBJECT;
     const out = {};
-    Object.keys(params).forEach(k => {
+    Object.keys(params).forEach((k) => {
       switch (typeof params[k]) {
-        case "object":
+        case 'object':
           out[k] = JSON.stringify(params[k]);
           break;
-        case "string":
+        case 'string':
           if (!isObject(JSON.parse(params[k]))) {
             throw errors.PARAM_OBJECT_ERROR;
           } else out[k] = params[k];
@@ -183,8 +181,8 @@ class Communicator {
   };
 
   /**
-   * @description This is a main fetch function. This will resolve the action and return either a Promise if no
-   *  dispatch is provided or it will dispatch
+   * @description This is a main fetch function. This will resolve the action and return either
+   *  a Promise if no dispatch is provided or it will dispatch
    * success/ failure action to redux.
    * @param {String} url - target url. This will be modified by request object if needed
    * @param {Object} options - options of the request. Options contains data like headers, method
@@ -207,7 +205,7 @@ class Communicator {
     name,
     useEmptyHeaders = false
   ) => {
-    const expected = requestParams.expected || "json";
+    const expected = requestParams.expected || 'json';
     let endPointUrl;
     let endOption = deepMerge(
       this.baseOptions,
@@ -224,7 +222,7 @@ class Communicator {
       dispatch: this.dispatch,
       params: requestParams,
       options: endOption,
-      url
+      url,
     };
 
     if (this.prefetchPool[name] && this.getState) {
@@ -234,7 +232,7 @@ class Communicator {
         : [this.prefetchPool[name]];
 
       /* you can either change object directly or return {params, options} */
-      pf.forEach(e => {
+      pf.forEach((e) => {
         const res = e(object);
         if (res) object = deepMerge(object, res);
       });
@@ -251,14 +249,14 @@ class Communicator {
     /* fetch part */
     let res;
     this.fetch(endPointUrl, endOption)
-      .then(response => {
+      .then((response) => {
         /* this object will be passes to second .then to be included in END dispatch */
         res = {
           ok: response.ok,
           redirected: response.redirected,
           status: response.status,
           type: response.type,
-          url: response.url
+          url: response.url,
         };
         if (
           positiveResponseStatus.indexOf(response.status) !== -1 ||
@@ -268,11 +266,11 @@ class Communicator {
         }
         throw response;
       })
-      .then(json => {
+      .then((json) => {
         /* json[0]->actual response, json[1]->res object storing some metadata */
         this.dispatch(this.actionEnd(name, json[0], json[1]));
       })
-      .catch(e => {
+      .catch((e) => {
         this.dispatch(this.actionError(name, res, e.message));
       });
     return true;
@@ -284,8 +282,8 @@ class Communicator {
    * Keys will be the function names.
    * @memberof Communicator
    */
-  setEndpoints = endpoints => {
-    Object.keys(endpoints).forEach(k => {
+  setEndpoints = (endpoints) => {
+    Object.keys(endpoints).forEach((k) => {
       const {
         url,
         prefetch,
@@ -293,7 +291,7 @@ class Communicator {
         options,
         useEmptyHeaders,
         postfetch,
-        transformer = transformers.object
+        transformer = transformers.object,
       } = endpoints[k];
 
       if (reducer) this.reducerPool[k] = reducer;
@@ -307,16 +305,14 @@ class Communicator {
       if (transformer && isFunction(transformer)) {
         this.transformerPool[k] = transformer;
       }
-      this[k] = (requestParams = {}, requestOptions = {}, _useEmptyHeaders) => {
-        return this.baseFetch(
-          url,
-          options,
-          requestParams,
-          requestOptions,
-          k,
-          _useEmptyHeaders || useEmptyHeaders
-        );
-      };
+      this[k] = (requestParams = {}, requestOptions = {}, _useEmptyHeaders) => this.baseFetch(
+        url,
+        options,
+        requestParams,
+        requestOptions,
+        k,
+        _useEmptyHeaders || useEmptyHeaders
+      );
       this.actions[k] = this[k];
     });
   };
@@ -332,11 +328,11 @@ class Communicator {
   reducer = (state = this.genererateInitialState(), action) => {
     if (action.type.indexOf(this.basePrefix) === -1) return state;
     let name = action.type.substring(this.basePrefix.length);
-    if (name.indexOf("_success") !== -1) {
-      name = name.replace("_success", "");
+    if (name.indexOf('_success') !== -1) {
+      name = name.replace('_success', '');
     }
-    if (name.indexOf("_fail") !== -1) {
-      name = name.replace("_fail", "");
+    if (name.indexOf('_fail') !== -1) {
+      name = name.replace('_fail', '');
     }
     return this.reducerPool[name](state, action);
   };
@@ -374,14 +370,14 @@ class Communicator {
       }
     }
     /* newState.isLoading = action.loading; */
-    if (action.type.indexOf("_success") !== -1) {
+    if (action.type.indexOf('_success') !== -1) {
       newState[k].loading = false;
       newState[k].data = action.payload.data;
       newState[k].ok = action.payload.msg.ok;
       newState[k].redirected = action.payload.msg.redirected;
       newState[k].status = action.payload.msg.status;
       newState[k].type = action.payload.msg.type;
-    } else if (action.type.indexOf("_fail") !== -1) {
+    } else if (action.type.indexOf('_fail') !== -1) {
       newState[k].loading = false;
       newState[k].ok = action.payload.msg.ok;
       newState[k].redirected = action.payload.msg.redirected;
@@ -403,15 +399,15 @@ class Communicator {
   genererateInitialState = () => {
     const state = {};
     state.isLoading = false;
-    Object.keys(this.reducerPool).forEach(k => {
+    Object.keys(this.reducerPool).forEach((k) => {
       state[k] = {
-        request: "",
-        params: "{}",
+        request: '',
+        params: '{}',
         data: this.transformerPool[k],
         ok: undefined,
         redirected: undefined,
         status: 0,
-        type: ""
+        type: '',
       };
     });
     return state;
@@ -430,8 +426,8 @@ class Communicator {
     loading: true,
     payload: {
       request,
-      params
-    }
+      params,
+    },
   });
   /**
    * @description Function that creates redux action.
@@ -446,8 +442,8 @@ class Communicator {
     loading: false,
     payload: {
       data,
-      msg
-    }
+      msg,
+    },
   });
   /**
    * @description Function that creates redux action.
@@ -461,8 +457,8 @@ class Communicator {
     loading: false,
     payload: {
       msg,
-      error
-    }
+      error,
+    },
   });
 
   /* TODO prefetch */
@@ -475,22 +471,22 @@ class Communicator {
   }; */
 
   getReducer = () => this.reducer;
-  setBaseUrl = url => {
+  setBaseUrl = (url) => {
     this.baseUrl = url;
   };
-  setDispatcher = dispatch => {
+  setDispatcher = (dispatch) => {
     this.dispatch = dispatch;
   };
-  setPrefix = prefix => {
+  setPrefix = (prefix) => {
     this.basePrefix = prefix;
   };
-  setFetch = _fetch => {
+  setFetch = (_fetch) => {
     this.fetch = _fetch.bind(window);
   };
-  setBaseOptions = options => {
+  setBaseOptions = (options) => {
     this.baseOptions = options;
   };
-  setGetState = getState => {
+  setGetState = (getState) => {
     this.getState = getState;
   };
 }

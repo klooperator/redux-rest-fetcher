@@ -56,7 +56,6 @@ const deepMerge = (...args) => {
   args.forEach((e) => {
     if (e.constructor === Object) out = mergeTwo(out, e);
   });
-  console.log(JSON.parse(JSON.stringify(out)));
   return out;
 };
 
@@ -269,6 +268,20 @@ class Communicator {
       .then((json) => {
         /* json[0]->actual response, json[1]->res object storing some metadata */
         this.dispatch(this.actionEnd(name, json[0], json[1]));
+        if (this.postfetchPool[name]) {
+          const pfObj = {
+            actions: this.actions,
+            getState: this.getState,
+            dispatch: this.dispatch,
+            data: json[0],
+          };
+          const pf = isArray(this.postfetchPool[name])
+            ? this.postfetchPool[name]
+            : [this.postfetchPool[name]];
+          pf.forEach((e) => {
+            e(pfObj);
+          });
+        }
       })
       .catch((e) => {
         this.dispatch(this.actionError(name, res, e.message));
@@ -372,7 +385,7 @@ class Communicator {
     /* newState.isLoading = action.loading; */
     if (action.type.indexOf('_success') !== -1) {
       newState[k].loading = false;
-      newState[k].data = action.payload.data;
+      newState[k].data = this.transformerPool[k](action.payload.data);
       newState[k].ok = action.payload.msg.ok;
       newState[k].redirected = action.payload.msg.redirected;
       newState[k].status = action.payload.msg.status;
@@ -403,7 +416,7 @@ class Communicator {
       state[k] = {
         request: '',
         params: '{}',
-        data: this.transformerPool[k],
+        data: this.transformerPool[k](),
         ok: undefined,
         redirected: undefined,
         status: 0,

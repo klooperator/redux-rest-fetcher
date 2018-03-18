@@ -4,24 +4,6 @@
 	(factory((global.reduxrestfetcher = {}),global.lodash));
 }(this, (function (exports,lodash) {
 
-var object = function object() {
-  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-  if (lodash.isObject(data)) return data;
-  return lodash.toPlainObject(data);
-};
-var array = function array() {
-  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-
-  if (lodash.isArray) return data;
-  return lodash.toArray(data);
-};
-
-var transformers = {
-  object: object,
-  array: array
-};
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -44,9 +26,104 @@ var classCallCheck = function (instance, Constructor) {
   }
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
+var object = function object() {
+  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  if (lodash.isObject(data)) return data;
+  return lodash.toPlainObject(data);
+};
+var array = function array() {
+  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+  if (lodash.isArray) return data;
+  return lodash.toArray(data);
+};
+
+var cumulativeArray = function cumulativeArray(check) {
+  return function () {
+    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    var oldData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+
+    if (!data) return oldData;
+    if (!check) return oldData.concat(lodash.isArray(data) ? data : lodash.toArray(data));
+    var newData = [].concat(toConsumableArray(oldData));
+    data.forEach(function (d) {
+      var doesExist = false;
+      oldData.forEach(function (o, i) {
+        if (d[check] === o[check]) {
+          newData[i] = d;
+          doesExist = true;
+        }
+      });
+      if (!doesExist) newData.push(d);
+    });
+    return newData;
+  };
+};
+
+var transformers = {
+  object: object,
+  array: array,
+  cumulativeArray: cumulativeArray
+};
+
+// eslint-disable import/prefer-default-export
+
 /* import  */
 /* CONSTS */
-var excluded = ["body", "GET", "expected"];
+var excluded = ['body', 'GET', 'expected'];
 var positiveResponseStatus = [200, 201, 202, 204, 205];
 
 /**
@@ -55,9 +132,9 @@ var positiveResponseStatus = [200, 201, 202, 204, 205];
  * @memberof Communicator
  */
 var errors = {
-  PREFETCH_NOT_A_FUNCTION: "Prefetch is expected to be a function. I dont know what I have here...",
-  PARAMS_NOT_OBJECT: "Error with params. You shoud pass object as params.",
-  PARAM_OBJECT_ERROR: "Error, your object, in params... There is something wrong with it."
+  PREFETCH_NOT_A_FUNCTION: 'Prefetch is expected to be a function. I dont know what I have here...',
+  PARAMS_NOT_OBJECT: 'Error with params. You shoud pass object as params.',
+  PARAM_OBJECT_ERROR: 'Error, your object, in params... There is something wrong with it.'
 };
 
 /**
@@ -69,8 +146,8 @@ var mergeTwo = function mergeTwo(obj1, obj2) {
   var _obj2 = obj2;
   var out = {};
   Object.keys(obj1).forEach(function (k) {
-    if (_typeof(obj1[k]) === "object" && obj1[k].constructor !== Array) {
-      if (obj2[k] && _typeof(obj2[k]) === "object") {
+    if (_typeof(obj1[k]) === 'object' && obj1[k].constructor !== Array) {
+      if (obj2[k] && _typeof(obj2[k]) === 'object') {
         out[k] = mergeTwo(obj1[k], obj2[k]);
       } else {
         out[k] = obj1[k];
@@ -101,12 +178,11 @@ var deepMerge = function deepMerge() {
   args.forEach(function (e) {
     if (e.constructor === Object) out = mergeTwo(out, e);
   });
-  console.log(JSON.parse(JSON.stringify(out)));
   return out;
 };
 
 var Communicator = function Communicator() {
-  var baseUrl = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
+  var baseUrl = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
   var dispatch = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
   classCallCheck(this, Communicator);
 
@@ -121,14 +197,14 @@ var Communicator = function Communicator() {
   this.transformerPool = {};
   this.actions = {};
   this.getState = undefined;
-  this.basePrefix = "api(.)(.)";
+  this.basePrefix = 'api(.)(.)';
   this.baseOptions = {
-    credentials: "include",
+    credentials: 'include',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Cache: "no-cache",
-      credentials: "same-origin"
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Cache: 'no-cache',
+      credentials: 'same-origin'
     }
   };
 };
@@ -138,18 +214,18 @@ var _initialiseProps = function _initialiseProps() {
 
   this.constructUrl = function (endPointUrl, request) {
     var url = endPointUrl;
-    if (endPointUrl.indexOf("http") === -1) {
-      url = "" + _this.baseUrl + endPointUrl;
+    if (endPointUrl.indexOf('http') === -1) {
+      url = '' + _this.baseUrl + endPointUrl;
     }
     if (lodash.isObject(request)) {
       Object.keys(request).forEach(function (key) {
         if (excluded.indexOf(key) === -1) {
-          var regex = new RegExp(":" + key);
+          var regex = new RegExp(':' + key);
           if (regex.test(url)) {
             url = url.replace(regex, request[key]);
           }
-        } else if (key === "GET") {
-          url = url + _this.getGetParamsAsString(request[key]);
+        } else if (key === 'GET') {
+          url += _this.getGetParamsAsString(request[key]);
         }
       });
     }
@@ -157,16 +233,20 @@ var _initialiseProps = function _initialiseProps() {
   };
 
   this.getGetParamsAsString = function (getObj) {
-    var out = "?";
+    var out = '?';
     Object.keys(getObj).forEach(function (k, i) {
-      if (_typeof(getObj[k]) !== "object" && typeof getObj[k] !== "function") out = out + (i !== 0 ? "&" : "") + k + "=" + getObj[k];
+      if (_typeof(getObj[k]) !== 'object' && typeof getObj[k] !== 'function') {
+        out = out + (i !== 0 ? '&' : '') + k + '=' + getObj[k];
+      }
     });
     return out;
   };
 
   this.getBody = function (request) {
     if (!request.body) return false;
-    if (typeof request.body === "string" && lodash.isObject(JSON.parse(request.body))) return { body: request.body };
+    if (typeof request.body === 'string' && lodash.isObject(JSON.parse(request.body))) {
+      return { body: request.body };
+    }
     if (lodash.isObject(request.body)) return { body: JSON.stringify(request.body) };
     return false;
   };
@@ -177,10 +257,10 @@ var _initialiseProps = function _initialiseProps() {
     var out = {};
     Object.keys(params).forEach(function (k) {
       switch (_typeof(params[k])) {
-        case "object":
+        case 'object':
           out[k] = JSON.stringify(params[k]);
           break;
-        case "string":
+        case 'string':
           if (!lodash.isObject(JSON.parse(params[k]))) {
             throw errors.PARAM_OBJECT_ERROR;
           } else out[k] = params[k];
@@ -200,7 +280,7 @@ var _initialiseProps = function _initialiseProps() {
     name = arguments[4];
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
-    var expected = requestParams.expected || "json";
+    var expected = requestParams.expected || 'json';
     var endPointUrl = void 0;
     var endOption = deepMerge(_this.baseOptions, options, reqestOptions
     /* we add body later */
@@ -254,6 +334,18 @@ var _initialiseProps = function _initialiseProps() {
     }).then(function (json) {
       /* json[0]->actual response, json[1]->res object storing some metadata */
       _this.dispatch(_this.actionEnd(name, json[0], json[1]));
+      if (_this.postfetchPool[name]) {
+        var pfObj = {
+          actions: _this.actions,
+          getState: _this.getState,
+          dispatch: _this.dispatch,
+          data: json[0]
+        };
+        var _pf = lodash.isArray(_this.postfetchPool[name]) ? _this.postfetchPool[name] : [_this.postfetchPool[name]];
+        _pf.forEach(function (e) {
+          e(pfObj);
+        });
+      }
     }).catch(function (e) {
       _this.dispatch(_this.actionError(name, res, e.message));
     });
@@ -287,7 +379,6 @@ var _initialiseProps = function _initialiseProps() {
         var requestParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var requestOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var _useEmptyHeaders = arguments[2];
-
         return _this.baseFetch(url, options, requestParams, requestOptions, k, _useEmptyHeaders || useEmptyHeaders);
       };
       _this.actions[k] = _this[k];
@@ -300,11 +391,11 @@ var _initialiseProps = function _initialiseProps() {
 
     if (action.type.indexOf(_this.basePrefix) === -1) return state;
     var name = action.type.substring(_this.basePrefix.length);
-    if (name.indexOf("_success") !== -1) {
-      name = name.replace("_success", "");
+    if (name.indexOf('_success') !== -1) {
+      name = name.replace('_success', '');
     }
-    if (name.indexOf("_fail") !== -1) {
-      name = name.replace("_fail", "");
+    if (name.indexOf('_fail') !== -1) {
+      name = name.replace('_fail', '');
     }
     return _this.reducerPool[name](state, action);
   };
@@ -332,14 +423,14 @@ var _initialiseProps = function _initialiseProps() {
         }
       }
       /* newState.isLoading = action.loading; */
-      if (action.type.indexOf("_success") !== -1) {
+      if (action.type.indexOf('_success') !== -1) {
         newState[k].loading = false;
-        newState[k].data = action.payload.data;
+        newState[k].data = _this.transformerPool[k](action.payload.data);
         newState[k].ok = action.payload.msg.ok;
         newState[k].redirected = action.payload.msg.redirected;
         newState[k].status = action.payload.msg.status;
         newState[k].type = action.payload.msg.type;
-      } else if (action.type.indexOf("_fail") !== -1) {
+      } else if (action.type.indexOf('_fail') !== -1) {
         newState[k].loading = false;
         newState[k].ok = action.payload.msg.ok;
         newState[k].redirected = action.payload.msg.redirected;
@@ -360,13 +451,13 @@ var _initialiseProps = function _initialiseProps() {
     state.isLoading = false;
     Object.keys(_this.reducerPool).forEach(function (k) {
       state[k] = {
-        request: "",
-        params: "{}",
-        data: _this.transformerPool[k],
+        request: '',
+        params: '{}',
+        data: _this.transformerPool[k](),
         ok: undefined,
         redirected: undefined,
         status: 0,
-        type: ""
+        type: ''
       };
     });
     return state;
@@ -374,7 +465,7 @@ var _initialiseProps = function _initialiseProps() {
 
   this.actionStart = function (name, request, params) {
     return {
-      type: "" + _this.basePrefix + name,
+      type: '' + _this.basePrefix + name,
       /* name, */
       loading: true,
       payload: {
@@ -387,7 +478,7 @@ var _initialiseProps = function _initialiseProps() {
   this.actionEnd = function (name, data) {
     var msg = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     return {
-      type: "" + _this.basePrefix + name + "_success",
+      type: '' + _this.basePrefix + name + '_success',
       /* name, */
       loading: false,
       payload: {
@@ -401,7 +492,7 @@ var _initialiseProps = function _initialiseProps() {
     var msg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var error = arguments[2];
     return {
-      type: "" + _this.basePrefix + name + "_fail",
+      type: '' + _this.basePrefix + name + '_fail',
       loading: false,
       payload: {
         msg: msg,

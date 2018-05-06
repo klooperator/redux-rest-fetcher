@@ -82,6 +82,12 @@ class Communicator {
     };
   }
 
+  getHelpers = () => ({
+    deepMerge,
+    actionEnd: this.actionEnd,
+    actionError: this.actionError,
+  })
+
   /**
    * @description Function used for constructing url and inserting parametars in to the
    * predefined holders.
@@ -159,7 +165,6 @@ class Communicator {
    *
    */
   processParams = (params) => {
-    /* TODO - separate body and rest. add ability to pass new fetch options overrides */
     if (!isObject(params)) throw errors.PARAMS_NOT_OBJECT;
     const out = {};
     Object.keys(params).forEach((k) => {
@@ -205,7 +210,7 @@ class Communicator {
     useEmptyHeaders = false
   ) => {
     const expected = requestParams.expected || 'json';
-    let endPointUrl;
+    /* let endPointUrl; */
     let endOption = deepMerge(
       this.baseOptions,
       options,
@@ -222,6 +227,7 @@ class Communicator {
       params: requestParams,
       options: endOption,
       url,
+      helpers: this.getHelpers(),
     };
 
     if (this.prefetchPool[name] && this.getState) {
@@ -238,7 +244,7 @@ class Communicator {
     }
 
     endOption = deepMerge(object.options, this.getBody(object.params));
-    endPointUrl = this.constructUrl(object.url, object.params);
+    const endPointUrl = this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!this.dispatch || this.dispatch === null) {
       return this.fetch(endPointUrl, endOption);
@@ -269,17 +275,19 @@ class Communicator {
         /* json[0]->actual response, json[1]->res object storing some metadata */
         this.dispatch(this.actionEnd(name, json[0], json[1]));
         if (this.postfetchPool[name]) {
-          const pfObj = {
+          let pfObj = {
             actions: this.actions,
             getState: this.getState,
             dispatch: this.dispatch,
             data: json[0],
+            helpers: this.getHelpers(),
           };
           const pf = isArray(this.postfetchPool[name])
             ? this.postfetchPool[name]
             : [this.postfetchPool[name]];
           pf.forEach((e) => {
-            e(pfObj);
+            const rpf = e(pfObj);
+            if (rpf)pfObj = deepMerge(pfObj, rpf);
           });
         }
       })

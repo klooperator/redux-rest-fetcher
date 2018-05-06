@@ -212,6 +212,14 @@ var Communicator = function Communicator() {
 var _initialiseProps = function _initialiseProps() {
   var _this = this;
 
+  this.getHelpers = function () {
+    return {
+      deepMerge: deepMerge,
+      actionEnd: _this.actionEnd,
+      actionError: _this.actionError
+    };
+  };
+
   this.constructUrl = function (endPointUrl, request) {
     var url = endPointUrl;
     if (endPointUrl.indexOf('http') === -1) {
@@ -252,7 +260,6 @@ var _initialiseProps = function _initialiseProps() {
   };
 
   this.processParams = function (params) {
-    /* TODO - separate body and rest. add ability to pass new fetch options overrides */
     if (!lodash.isObject(params)) throw errors.PARAMS_NOT_OBJECT;
     var out = {};
     Object.keys(params).forEach(function (k) {
@@ -281,7 +288,7 @@ var _initialiseProps = function _initialiseProps() {
     var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
     var expected = requestParams.expected || 'json';
-    var endPointUrl = void 0;
+    /* let endPointUrl; */
     var endOption = deepMerge(_this.baseOptions, options, reqestOptions
     /* we add body later */
     );
@@ -294,7 +301,8 @@ var _initialiseProps = function _initialiseProps() {
       dispatch: _this.dispatch,
       params: requestParams,
       options: endOption,
-      url: url
+      url: url,
+      helpers: _this.getHelpers()
     };
 
     if (_this.prefetchPool[name] && _this.getState) {
@@ -309,7 +317,7 @@ var _initialiseProps = function _initialiseProps() {
     }
 
     endOption = deepMerge(object.options, _this.getBody(object.params));
-    endPointUrl = _this.constructUrl(object.url, object.params);
+    var endPointUrl = _this.constructUrl(object.url, object.params);
     /* if no dispatch return promise */
     if (!_this.dispatch || _this.dispatch === null) {
       return _this.fetch(endPointUrl, endOption);
@@ -339,11 +347,13 @@ var _initialiseProps = function _initialiseProps() {
           actions: _this.actions,
           getState: _this.getState,
           dispatch: _this.dispatch,
-          data: json[0]
+          data: json[0],
+          helpers: _this.getHelpers()
         };
         var _pf = lodash.isArray(_this.postfetchPool[name]) ? _this.postfetchPool[name] : [_this.postfetchPool[name]];
         _pf.forEach(function (e) {
-          e(pfObj);
+          var rpf = e(pfObj);
+          if (rpf) pfObj = deepMerge(pfObj, rpf);
         });
       }
     }).catch(function (e) {
